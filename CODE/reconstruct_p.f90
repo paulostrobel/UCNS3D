@@ -1,4 +1,5 @@
 MODULE RECON
+USE BLAS95
 USE DECLARATION
 USE DERIVATIVES
 USE LIBRARY
@@ -27,7 +28,6 @@ end subroutine check_fs
 
 
 SUBROUTINE AVERAGE_STRESSES(N)
-implicit none
 !> @brief
 !> Subroutine for calling the computation of the average shear stresses
 INTEGER,INTENT(IN)::N
@@ -291,85 +291,49 @@ END IF
 END SUBROUTINE 
 
 
-subroutine diag_At_B_A(ICONSIDERED)
+subroutine diag_At_B_A(ICONSIDERED,A_CHAR,B_CHAR,x_CHAR)
 !> @brief
 !> Subroutine For general matrix A and square matrix B, computes the vector x = diag(A' * B * A), used for characteristics reconstruction
 implicit none
+   real, dimension(:,:,:), intent(in):: A_char
+   real, dimension(:,:), intent(inOUT)::  B_char
+   real, dimension(:,:), intent(inout):: x_char
    integer, intent(in):: ICONSIDERED
    real, dimension(:,:,:), allocatable:: BA_char
-   REAL,external:: ddot
+
    integer:: nn, mm
    integer:: i,LL,ICS
 
    nn = size(A_char,1) ! = size(B,1) = size(B,2)
    mm = size(A_char,2)
-         
-
-
-
+   
    
 
-   allocate(BA_char(nn, mm,ielem(n,iconsidered)%admis))
+   allocate(BA_char(nn, mm,10))
    
    x_char=zero
    
    IF (EES.EQ.5)THEN
 	  DO LL=1,1
-! 	  call gemm(B_char(:,:), A_char(:,:,LL), BA_char(:,:,LL)) ! BA = B * A
-	  
-	  CALL DGEMM('N','N',IELEM(N,ICONSIDERED)%idegfree,nof_variables,IELEM(N,ICONSIDERED)%idegfree,ALPHA,&
-	  B_char(1:IELEM(N,ICONSIDERED)%idegfree,1:IELEM(N,ICONSIDERED)%idegfree),IELEM(N,ICONSIDERED)%idegfree,&
-	  A_CHAR(1:IELEM(N,ICONSIDERED)%idegfree,1:nof_variables,LL),&
-        IELEM(N,ICONSIDERED)%idegfree,BETA,BA_CHAR(1:IELEM(N,ICONSIDERED)%idegfree,1:nof_Variables,LL),&
-        IELEM(N,ICONSIDERED)%idegfree)    
-	  
-	  
-	
-
-
-
+	  call gemm(B_char(:,:), A_char(:,:,LL), BA_char(:,:,LL)) ! BA = B * A
 	  END DO
 	B_CHAR(1:IDEGFREE2,1:IDEGFREE2)=ILOCAL_RECON3(ICONSIDERED)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2)
 	  DO LL=2,IELEM(N,ICONSIDERED)%ADMIS
-	  
-! 	  call gemm(B_char(1:IDEGFREE2,1:IDEGFREE2), A_char(1:IDEGFREE2,1:nof_variables,LL), BA_CHAR(1:IDEGFREE2,1:nof_Variables,LL)) ! BA = B * A
-	  
-	  CALL DGEMM('N','N',IDEGFREE2,nof_variables,IDEGFREE2,ALPHA,B_char(1:IDEGFREE2,1:IDEGFREE2),IDEGFREE2,&
-	  A_CHAR(1:IDEGFREE2,1:nof_variables,LL),&
-        IDEGFREE2,BETA,BA_CHAR(1:IDEGFREE2,1:nof_Variables,LL),IDEGFREE2)  
-
-	
-
-
-
+	  call gemm(B_char(1:IDEGFREE2,1:IDEGFREE2), A_char(1:IDEGFREE2,1:nof_variables,LL), BA_CHAR(1:IDEGFREE2,1:nof_Variables,LL)) ! BA = B * A
 	  END DO
-
 	  DO LL=1,1;do i = 1, mm
-	    !x_char(i,LL) = dot(A_char(:,i,LL), BA_char(:,i,LL))
-	    x_char(i,LL) =DDOT(IELEM(N,ICONSIDERED)%idegfree,a_char(1:IELEM(N,ICONSIDERED)%idegfree,i,ll),1,BA_char(1:IELEM(N,ICONSIDERED)%idegfree,i,LL),1)
+	    x_char(i,LL) = dot(A_char(:,i,LL), BA_char(:,i,LL))
 	  end do;END DO
 	  DO LL=2,IELEM(N,ICONSIDERED)%ADMIS;do i = 1, mm
-	    !x_char(i,LL) = dot(A_char(1:IDEGFREE2,i,LL), BA_char(1:IDEGFREE2,i,LL))
-	    x_char(i,LL) =DDOT(IDEGFREE2,a_char(1:IDEGFREE2,i,ll),1,BA_char(1:IDEGFREE2,i,LL),1)
+	    x_char(i,LL) = dot(A_char(1:IDEGFREE2,i,LL), BA_char(1:IDEGFREE2,i,LL))
 	  end do;END DO
-
-! 	WRITE(300+N,*)"FINITO"
-! 	WRITE(300+n,*)x_char(1:NOF_VARIABLES,1:IELEM(N,ICONSIDERED)%ADMIS)
-! 		STOP	
    ELSE
    
 	      DO LL=1,IELEM(N,ICONSIDERED)%ADMIS
-! 	      call gemm(B_char(:,:), A_char(:,:,LL), BA_char(:,:,LL)) ! BA = B * A
-	      
-	      CALL DGEMM('N','N',IELEM(N,ICONSIDERED)%idegfree,nof_variables,IELEM(N,ICONSIDERED)%idegfree,ALPHA,&
-	      B_char(1:IELEM(N,ICONSIDERED)%idegfree,1:IELEM(N,ICONSIDERED)%idegfree),IELEM(N,ICONSIDERED)%idegfree,&
-	      A_CHAR(1:IELEM(N,ICONSIDERED)%idegfree,1:nof_variables,LL),&
-            IELEM(N,ICONSIDERED)%idegfree,BETA,BA_CHAR(1:IELEM(N,ICONSIDERED)%idegfree,1:nof_Variables,LL),&
-            IELEM(N,ICONSIDERED)%idegfree)  
+	      call gemm(B_char(:,:), A_char(:,:,LL), BA_char(:,:,LL)) ! BA = B * A
 	      END DO
 	      DO LL=1,IELEM(N,ICONSIDERED)%ADMIS;do i = 1, mm
-		  !x_char(i,LL) = dot(A_char(:,i,LL), BA_char(:,i,LL))
-		   x_char(i,LL) =DDOT(IELEM(N,ICONSIDERED)%idegfree,a_char(1:IELEM(N,ICONSIDERED)%idegfree,i,ll),1,BA_char(1:IELEM(N,ICONSIDERED)%idegfree,i,LL),1)
+		  x_char(i,LL) = dot(A_char(:,i,LL), BA_char(:,i,LL))
 	      end do;END DO
    END IF
    
@@ -381,15 +345,13 @@ subroutine compute_gradcharv_smoothindicator(ICONSIDERED, FACEX)
 !> Subroutine for characteristics reconstruction of WENO schemes
 IMPLICIT NONE
    integer, intent(inOUT):: ICONSIDERED, FACEX
-   integer:: LL, k,I,L,ifds
-   real, allocatable,dimension(:,:,:):: gradients
-   real, allocatable,dimension(:,:,:):: gradients_eigvlt
-   
-   allocate(gradients(0:idegfree,1:nof_variables,1:typesten),gradients_eigvlt(0:idegfree,1:nof_variables,1:typesten))
+   integer:: LL, k,I,L
+   real, dimension(0:idegfree,nof_variables,typesten):: gradients
+   real, dimension(0:idegfree,nof_variables,typesten):: gradients_eigvlt
    I=ICONSIDERED
    L=FACEX
    GRADCHARV=zero
-   gradients(:,:,:)=ZERO;gradients_eigvlt(:,:,:)=zero
+   gradients(:,:,:)=ZERO
    DO LL=1,IELEM(N,I)%ADMIS
     gradients(0,:,ll) = U_C(I)%VAL(1,1:nof_variables)
    end do
@@ -405,50 +367,22 @@ IMPLICIT NONE
 		      (ILOCAL_RECON5(1)%GRADIENTS(1,1:IELEM(N,I)%IDEGFREE,1:nof_variables)-GRAD5ALC(1:IELEM(N,I)%IDEGFREE,1:nof_variables))
 		    END DO
 		    DO LL=1,1
-! 			    CALL GEMM(                                            &
-! 			    gradients(0:IELEM(N,I)%idegfree,1:nof_variables,ll),                    &
-! 			    EIGVL(1:nof_variables,1:nof_variables),                           &
-! 			    gradients_eigvlt(0:IELEM(N,I)%idegfree,1:nof_variables,ll),             &
-! 			    'N',                                              & ! transposition flag for gradients
-! 			    'T'                                               & ! transposition flag for EIGVL
-! 			)
-			
-			call DGEMM ('N','T',IELEM(N,I)%idegfree+1,nof_variables,nof_variables,&
-			ALPHA,gradients(0:IELEM(N,I)%idegfree,1:nof_variables,ll),IELEM(N,I)%idegfree+1,&
-            EIGVL(1:nof_variables,1:nof_variables),nof_variables,BETA,&
-            gradients_eigvlt(0:IELEM(N,I)%idegfree,1:nof_variables,ll),IELEM(N,I)%idegfree+1)
-            
-            
-            
-            
-            
-
+			    CALL GEMM(                                            &
+			    gradients(0:IELEM(N,I)%idegfree,1:nof_variables,ll),                    &
+			    EIGVL(1:nof_variables,1:nof_variables),                           &
+			    gradients_eigvlt(0:IELEM(N,I)%idegfree,1:nof_variables,ll),             &
+			    'N',                                              & ! transposition flag for gradients
+			    'T'                                               & ! transposition flag for EIGVL
+			)
 		      END DO
 		    DO LL=2,IELEM(N,I)%ADMIS
-! 			    CALL GEMM(                                            &
-! 			    gradients(0:IDEGFREE2,1:nof_variables,ll),                    &
-! 			    EIGVL(1:nof_variables,1:nof_variables),                           &
-! 			    gradients_eigvlt(0:IDEGFREE2,1:nof_variables,ll),             &
-! 			    'N',                                              & ! transposition flag for gradients
-! 			    'T'                                               & ! transposition flag for EIGVL
-! 			)
-
-
-        !IDEGFREE2,NOF_VARIABLES,
-          
-			
-			call DGEMM ('N','T',IDEGFREE2+1,nof_variables,nof_variables,&
-			ALPHA,gradients(0:IDEGFREE2,1:nof_variables,ll),IDEGFREE2+1,&
-            EIGVL(1:nof_variables,1:nof_variables),nof_variables,BETA,&
-            gradients_eigvlt(0:IDEGFREE2,1:nof_variables,ll),IDEGFREE2+1)
-
-			
-			
-			
-			
-			
-			
-			
+			    CALL GEMM(                                            &
+			    gradients(0:IDEGFREE2,1:nof_variables,ll),                    &
+			    EIGVL(1:nof_variables,1:nof_variables),                           &
+			    gradients_eigvlt(0:IDEGFREE2,1:nof_variables,ll),             &
+			    'N',                                              & ! transposition flag for gradients
+			    'T'                                               & ! transposition flag for EIGVL
+			)
 		    END DO
 
 	  ELSE
@@ -459,20 +393,13 @@ IMPLICIT NONE
 	  
 	  DO LL=1,IELEM(N,I)%ADMIS
 	      ! gradients_eigvlt = gradients * transpose(EIGVL)
-! 	      CALL GEMM(                                            &
-! 		  gradients(0:IELEM(N,I)%idegfree,1:nof_variables,ll),                    &
-! 		  EIGVL(1:nof_variables,1:nof_variables),                           &
-! 		  gradients_eigvlt(0:IELEM(N,I)%idegfree,1:nof_variables,ll),             &
-! 		  'N',                                              & ! transposition flag for gradients
-! 		  'T'                                               & ! transposition flag for EIGVL
-! 	      )
-	      
-	      call DGEMM ('N','T',IELEM(N,I)%idegfree+1,nof_variables,nof_variables,&
-			ALPHA,gradients(0:IELEM(N,I)%idegfree,1:nof_variables,ll),IELEM(N,I)%idegfree+1,&
-        EIGVL(1:nof_variables,1:nof_variables),nof_variables,BETA,&
-        gradients_eigvlt(0:IELEM(N,I)%idegfree,1:nof_variables,ll),IELEM(N,I)%idegfree+1)
-	      
-	      
+	      CALL GEMM(                                            &
+		  gradients(0:IELEM(N,I)%idegfree,1:nof_variables,ll),                    &
+		  EIGVL(1:nof_variables,1:nof_variables),                           &
+		  gradients_eigvlt(0:IELEM(N,I)%idegfree,1:nof_variables,ll),             &
+		  'N',                                              & ! transposition flag for gradients
+		  'T'                                               & ! transposition flag for EIGVL
+	      )
 	  END DO
     END IF
     
@@ -485,12 +412,11 @@ IMPLICIT NONE
 		      ! SMOOTHINDICATOR(:,LL,L,1) = diag(transpose(gradients_eigvlt) * indicator * gradients_eigvlt)
 		      A_CHAR(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS)=gradients_eigvlt(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS)
 		      B_CHAR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree)=ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree)
-		      CALL diag_At_B_A(ICONSIDERED)
-! 		      ,                                     &
-! 			A_CHAR(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS),              &
-! 			B_CHAR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree), &
-! 			X_CHAR(1:nof_variables,1:IELEM(N,I)%ADMIS)                          &
-! 		      )
+		      CALL diag_At_B_A(ICONSIDERED,                                     &
+			A_CHAR(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS),              &
+			B_CHAR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree), &
+			X_CHAR(1:nof_variables,1:IELEM(N,I)%ADMIS)                          &
+		      )
 			SMOOTHINDICATOR(1:nof_variables,1:IELEM(N,I)%ADMIS,L,1)=X_CHAR(1:nof_variables,1:IELEM(N,I)%ADMIS)
         ELSE
         
@@ -508,15 +434,13 @@ IMPLICIT NONE
       A_CHAR(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS)=gradients_eigvlt(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS)
       B_CHAR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree)=ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree)
       
-      CALL diag_At_B_A(ICONSIDERED)!,                                     &
-!          A_CHAR(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS),              &
-!          B_CHAR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree), &
-!          X_CHAR(1:nof_variables,1:IELEM(N,I)%ADMIS)                          &
-!       )
+      CALL diag_At_B_A(ICONSIDERED,                                     &
+         A_CHAR(1:IELEM(N,I)%idegfree,1:nof_variables,1:IELEM(N,I)%ADMIS),              &
+         B_CHAR(1:IELEM(N,I)%idegfree,1:IELEM(N,I)%idegfree), &
+         X_CHAR(1:nof_variables,1:IELEM(N,I)%ADMIS)                          &
+      )
         SMOOTHINDICATOR(1:nof_variables,1:IELEM(N,I)%ADMIS,L,1)=X_CHAR(1:nof_variables,1:IELEM(N,I)%ADMIS)
         END IF
-        
-        deallocate(gradients,gradients_eigvlt)
 
 end subroutine
 
@@ -534,7 +458,7 @@ INTEGER::IDUMMY,POWER,ITARGET
 REAL::SUMOMEGAATILDEL
 REAL::DIVBYZERO,COMPF,checkf,tau_Weno
 REAL,DIMENSION(NUMBEROFPOINTS2)::WEIGHTS_Q,WEIGHTS_T
-REAL,EXTERNAL::DDOT
+
 
 KMAXE=XMPIELRANK(N)
 DIVBYZERO=1.0e-6
@@ -675,34 +599,13 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 			    end do
 ! 			   
 					    
-! 							call gemm(                  &
-! 							consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
-! 							FINDW_char(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1,1),  &
-! 							RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
-! 							'N',                                                  & ! transposition flag for consmatrix
-! 							    'T'                                                   & ! transposition flag for findw
-! 								)
-							
-							
-							call DGEMM ('N','T',ICD,nof_variables,ielem(n,i)%idegfree,&
-							ALPHA,consmatrix(1:icd,1:ielem(n,i)%idegfree),Icd,&
-                            FINDW_char(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1,1),nof_variables,&
-                            BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),Icd)	
-							
-							
-            
-								
-								
-								
-							
-								
-								
-								
-								
-								
-								
-								
-								
+							call gemm(                  &
+							consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
+							FINDW_char(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1,1),  &
+							RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
+							'N',                                                  & ! transposition flag for consmatrix
+							    'T'                                                   & ! transposition flag for findw
+								)
 							icd=0;do NGP=1,iqp;icd=icd+1	    
 							ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)=ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)&
 							+RESSOLUTION(icd,1:NOF_vARIABLES)
@@ -711,21 +614,13 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 			      DO NGP=1,iqp	
 			      ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)=FINDW(1:nof_Variables,0,L,1)
 			      end do	
-! 					call gemm(                  &
-! 					consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
-! 				      FINDW(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1),  &
-! 				      RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
-! 				      'N',                                                  & ! transposition flag for consmatrix
-! 					  'T'                                                   & ! transposition flag for findw
-! 					      )
-					      
-					      
-					      call DGEMM ('N','T',ICD,nof_variables,ielem(n,i)%idegfree,&
-							ALPHA,consmatrix(1:icd,1:ielem(n,i)%idegfree),Icd,&
-                            FINDW(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1),nof_variables,&
-                            BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),Icd)	
-					      
-					      
+					call gemm(                  &
+					consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
+				      FINDW(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1),  &
+				      RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
+				      'N',                                                  & ! transposition flag for consmatrix
+					  'T'                                                   & ! transposition flag for findw
+					      )
 					      icd=0;do NGP=1,iqp;icd=icd+1	    
 				      ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)=ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)&
 				      +RESSOLUTION(icd,1:NOF_vARIABLES)
@@ -750,31 +645,18 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				    GRAD5ALc(1:IELEM(N,I)%IDEGFREE,iex)=GRAD1AL(1:IELEM(N,I)%IDEGFREE)
 				  DO LL=1,IELEM(N,I)%ADMIS
 				    IF (LL.EQ.1)THEN
-				    
-! 					call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 					      GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 					      INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 					      )
-					      
-                    CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-                    
-! 					SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-					SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-					
+					call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+					      GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+					      INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+					      )
+					SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 				    ELSE
 					GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC(ll,1:IDEGFREE2,IEX)
-! 					call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-! 					      GRAD1AL(1:IDEGFREE2),   &
-! 					      INDICATEMATRIXAL(1:IDEGFREE2)     &
-! 					      )
-					      
-                    CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-
-					SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+					call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+					      GRAD1AL(1:IDEGFREE2),   &
+					      INDICATEMATRIXAL(1:IDEGFREE2)     &
+					      )
+					SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
 				    END IF
 				  END DO
                          ELSE
@@ -782,17 +664,11 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				  GRAD1AL(:)=ZERO
 				  INDICATEMATRIXAL(:)=ZERO
 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE)=ILOCAL_RECON5(1)%GRADIENTS(LL,1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				   CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-				  
-
-				  SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
+				  SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 			      END DO
                          END IF
 			      LAMBDAAL(:)=1.0D0
@@ -921,19 +797,12 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				GRADSSL(1:IELEM(N,I)%IDEGFREE,1:nof_variables)=GRAD5ALc(1:IELEM(N,I)%IDEGFREE,1:nof_variables)
 				
 
-! 				
-!                                 call gemm(                                                  &
-!                             CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
-!                             GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
-!                             RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-!                                 )
-                                
-                    CALL DGEMM('N','N',ICD,nof_variables,IELEM(N,I)%IDEGFREE,ALPHA,&
-                    CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),ICD,&
-                    GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),&
-                    IELEM(N,I)%IDEGFREE,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
-                    
-    
+				
+                                call gemm(                                                  &
+                            CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
+                            GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
+                            RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+                                )
 				
 				
 				else
@@ -941,17 +810,11 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				
 
 				
-!                                 call gemm(                                                  &
-!                             CONSMATRIXC(1:ICD,1:idegfree2),                &
-!                             GRADSSL(1:idegfree2,1:NOF_vARIABLES),                                                &
-!                             RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-!                                 )
-                                
-                                
-                                 CALL DGEMM('N','N',ICD,nof_variables,idegfree2,ALPHA,&
-                    CONSMATRIXc(1:ICD,1:IDEGFREE2),ICD,&
-                    GRADSSL(1:IDEGFREE2,1:NOF_vARIABLES),&
-                    IDEGFREE2,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
+                                call gemm(                                                  &
+                            CONSMATRIXC(1:ICD,1:idegfree2),                &
+                            GRADSSL(1:idegfree2,1:NOF_vARIABLES),                                                &
+                            RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+                                )
 				
 				
 				
@@ -965,16 +828,11 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				
 
 				
-!                                 call gemm(                                                  &
-!                             CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
-!                             GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
-!                             RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-!                                 )
-                                
-                                CALL DGEMM('N','N',ICD,nof_variables,IELEM(N,I)%IDEGFREE,ALPHA,&
-                    CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),ICD,&
-                    GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),&
-                    IELEM(N,I)%IDEGFREE,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
+                                call gemm(                                                  &
+                            CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
+                            GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
+                            RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+                                )
 				
 				
 				END IF
@@ -1026,32 +884,20 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 		    
                                 DO LL=1,IELEM(N,I)%ADMIS
                                         IF (LL.EQ.1)THEN
-!                                             call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-!                                             GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-!                                             INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-!                                             )
-                                            
-                                             CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-!                                           
-
-                                            
-                                            SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-                                            
+                                            call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+                                            GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+                                            INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+                                            )
+                                            SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
                                         else
                                             GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC2(ll,1:IDEGFREE2,IEX)
-!                                         call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-!                                             GRAD1AL(1:IDEGFREE2),   &
-!                                             INDICATEMATRIXAL(1:IDEGFREE2)     &
-!                                             )
-                                            
-                                        CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-
+                                        call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+                                            GRAD1AL(1:IDEGFREE2),   &
+                                            INDICATEMATRIXAL(1:IDEGFREE2)     &
+                                            )
+                                        SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
                                         
-                                        SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+                                        
                                         
                                         end if
                                 end do
@@ -1063,19 +909,11 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
             ! 			  DO K=1,IELEM(N,I)%idegfree
                                     GRAD1AL(1:IELEM(N,I)%idegfree)=ILOCAL_RECON5(1)%GRADIENTS2(LL,1:IELEM(N,I)%idegfree,IEX)
             ! 			  END DO
-!                                 call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-!                                             GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-!                                             INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-!                                             )
-! 
-                                 CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-
-                                
-                                SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-                                
-                                
+                                call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+                                            GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+                                            INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+                                            )
+                                SMOOTHINDICATORAL(LL)= DOT_PRODUCT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
                                 END DO
 		      
 		      
@@ -1205,15 +1043,14 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 ! 	    			END DO
                                     IF (EES.EQ.5)THEN
                                         IF (LL.EQ.1)THEN
-
-                                        RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
                                         else
-
-                                        RESSOLUTION(1,1) = DDOT(Idegfree2,CONSMATRIXC(1,1:Idegfree2),1,GRADSSL(1:Idegfree2,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIXc(1,1:Idegfree2),GRADSSL(1:IDEGFREE2,1))
+                                    
                                         end if
                                     else
-!                                      RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
-                                     RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                     RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
+                                    
                                     end if
                                     
                                     
@@ -1486,20 +1323,13 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 			    end do
 ! 			   
 					    
-! 							call gemm(                  &
-! 							consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
-! 							FINDW_char(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1,1),  &
-! 							RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
-! 							'N',                                                  & ! transposition flag for consmatrix
-! 							    'T'                                                   & ! transposition flag for findw
-! 								)
-								
-							 call DGEMM ('N','T',iCD,nof_variables,ielem(n,i)%idegfree,&
-							ALPHA,consmatrix(1:icd,1:ielem(n,i)%idegfree),Icd,&
-                            FINDW_char(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1,1),nof_variables,&
-                            BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),Icd)		
-								
-								
+							call gemm(                  &
+							consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
+							FINDW_char(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1,1),  &
+							RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
+							'N',                                                  & ! transposition flag for consmatrix
+							    'T'                                                   & ! transposition flag for findw
+								)
 							icd=0;do NGP=1,iqp;icd=icd+1	    
 							ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)=ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)&
 							+RESSOLUTION(icd,1:NOF_vARIABLES)
@@ -1508,20 +1338,13 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 			      DO NGP=1,iqp	
 			      ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)=FINDW(1:nof_Variables,0,L,1)
 			      end do	
-! 					call gemm(                  &
-! 					consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
-! 				      FINDW(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1),  &
-! 				      RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
-! 				      'N',                                                  & ! transposition flag for consmatrix
-! 					  'T'                                                   & ! transposition flag for findw
-! 					      )
-					      
-                  call DGEMM ('N','T',iCD,nof_variables,ielem(n,i)%idegfree,&
-							ALPHA,consmatrix(1:icd,1:ielem(n,i)%idegfree),Icd,&
-                            FINDW(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1),nof_variables,&
-                            BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),Icd)	
-					      
-					      
+					call gemm(                  &
+					consmatrix(1:icd,1:ielem(n,i)%idegfree) ,     &
+				      FINDW(1:nof_variables,1:IELEM(N,I)%IDEGFREE,L,1),  &
+				      RESSOLUTION(1:ICD,1:NOF_vARIABLES),   &
+				      'N',                                                  & ! transposition flag for consmatrix
+					  'T'                                                   & ! transposition flag for findw
+					      )
 					      icd=0;do NGP=1,iqp;icd=icd+1	    
 				      ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)=ILOCAL_RECON3(I)%ULEFT(1:nof_Variables,L,NGP)&
 				      +RESSOLUTION(icd,1:NOF_vARIABLES)
@@ -1547,29 +1370,18 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				    GRAD5ALc(1:IELEM(N,I)%IDEGFREE,iex)=GRAD1AL(1:IELEM(N,I)%IDEGFREE)
 				  DO LL=1,IELEM(N,I)%ADMIS
 				    IF (LL.EQ.1)THEN
-! 					call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 					      GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 					      INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 					      )
-                    
-                     CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-
-					      
-					SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+					call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+					      GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+					      INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+					      )
+					SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 				    ELSE
 					GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC(ll,1:IDEGFREE2,IEX)
-! 					call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-! 					      GRAD1AL(1:IDEGFREE2),   &
-! 					      INDICATEMATRIXAL(1:IDEGFREE2)     &
-! 					      )
-                    CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-
-					      
-					SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+					call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+					      GRAD1AL(1:IDEGFREE2),   &
+					      INDICATEMATRIXAL(1:IDEGFREE2)     &
+					      )
+					SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
 				    END IF
 				  END DO
                          ELSE
@@ -1577,17 +1389,11 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				  GRAD1AL(:)=ZERO
 				  INDICATEMATRIXAL(:)=ZERO
 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE)=ILOCAL_RECON5(1)%GRADIENTS(LL,1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				  CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-				  
-				  
-				  SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
+				  SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 			      END DO
                          END IF
 
@@ -1747,32 +1553,19 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				IF (EES.EQ.5)THEN
 				    IF (LL.EQ.1)THEN
 				GRADSSL(1:IELEM(N,I)%IDEGFREE,1:nof_variables)=GRAD5ALc(1:IELEM(N,I)%IDEGFREE,1:nof_variables)
-! 				    call gemm(                                                  &
-! 				CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
-! 				GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
-! 				RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-! 				    )
-				    
-				    CALL DGEMM('N','N',ICD,nof_variables,IELEM(N,I)%IDEGFREE,ALPHA,&
-                    CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),ICD,&
-                    GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),&
-                    IELEM(N,I)%IDEGFREE,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
-				    
+				    call gemm(                                                  &
+				CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
+				GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
+				RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+				    )
 				    
 				    else
 				    GRADSSL(1:Idegfree2,1:nof_variables)=ILOCAL_RECON5(1)%GRADIENTSc(LL,1:idegfree2,1:nof_variables)
-! 				    call gemm(                                                  &
-! 				CONSMATRIXC(1:ICD,1:idegfree2),                &
-! 				GRADSSL(1:idegfree2,1:NOF_vARIABLES),                                                &
-! 				RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-! 				    )
-				    
-				    CALL DGEMM('N','N',ICD,nof_variables,idegfree2,ALPHA,&
-                    CONSMATRIXc(1:ICD,1:IDEGFREE2),ICD,&
-                    GRADSSL(1:IDEGFREE2,1:NOF_vARIABLES),&
-                    IDEGFREE2,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
-				    
-				    
+				    call gemm(                                                  &
+				CONSMATRIXC(1:ICD,1:idegfree2),                &
+				GRADSSL(1:idegfree2,1:NOF_vARIABLES),                                                &
+				RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+				    )
 				    end if
 				
 				
@@ -1783,17 +1576,11 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 				
 
 				
-!                                 call gemm(                                                  &
-!                             CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
-!                             GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
-!                             RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-!                                 )
-                                
-                                CALL DGEMM('N','N',ICD,nof_variables,IELEM(N,I)%IDEGFREE,ALPHA,&
-                    CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),ICD,&
-                    GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),&
-                    IELEM(N,I)%IDEGFREE,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
-                                
+                                call gemm(                                                  &
+                            CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
+                            GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
+                            RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+                                )
 				
 				
 				END IF
@@ -1862,29 +1649,18 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 		    
                                 DO LL=1,IELEM(N,I)%ADMIS
                                         IF (LL.EQ.1)THEN
-!                                             call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-!                                             GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-!                                             INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-!                                             )
-                                            
-                                             CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-                                            
-                                            
-                                            
-                                            SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+                                            call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+                                            GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+                                            INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+                                            )
+                                            SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
                                         else
                                             GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC2(ll,1:IDEGFREE2,IEX)
-!                                         call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-!                                             GRAD1AL(1:IDEGFREE2),   &
-!                                             INDICATEMATRIXAL(1:IDEGFREE2)     &
-!                                             )
-                                            
-                                        CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-                                        SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+                                        call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+                                            GRAD1AL(1:IDEGFREE2),   &
+                                            INDICATEMATRIXAL(1:IDEGFREE2)     &
+                                            )
+                                        SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
                                         
                                         
                                         
@@ -1898,17 +1674,11 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 ! 			  DO K=1,IELEM(N,I)%idegfree
 			  GRAD1AL(1:IELEM(N,I)%idegfree)=ILOCAL_RECON5(1)%GRADIENTS2(LL,1:IELEM(N,I)%idegfree,IEX)
 ! 			  END DO
-! 		      call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				  
-             CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-! 		     
-		      SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+		      call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
+		      SMOOTHINDICATORAL(LL)= DOT_PRODUCT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 		    END DO
 		      
 		      
@@ -2061,13 +1831,13 @@ DO II=1,NOF_INTERIOR;I=EL_INT(II);ICONSIDERED=I
 ! 	    			END DO
                                     IF (EES.EQ.5)THEN
                                         IF (LL.EQ.1)THEN
-                                        RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
                                         else
-                                        RESSOLUTION(1,1) = DDOT(Idegfree2,CONSMATRIXC(1,1:Idegfree2),1,GRADSSL(1:Idegfree2,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIXc(1,1:Idegfree2),GRADSSL(1:Idegfree2,1))
                                     
                                         end if
                                     else
-                                     RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                     RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
                                     
                                     end if
                                     
@@ -2110,7 +1880,6 @@ INTEGER::I,J,K,L,M,O,LL,IEX,IEUL,FACX,IELEME,KKD,KMAXE,JF,NGP,IQP,nnd,ii
 INTEGER::IDUMMY,POWER,itarget
 REAL::SUMOMEGAATILDEL,tau_Weno
 REAL::DIVBYZERO,COMPF,checkf
-REAL,EXTERNAL::DDOT
 
 KMAXE=XMPIELRANK(N)
 DIVBYZERO=1.0e-6
@@ -2335,39 +2104,28 @@ POWER=4
                              
                              DO LL=1,IELEM(N,I)%ADMIS
                              IF (LL.EQ.1)THEN
-!                             GRAD1AL(1:IELEM(N,I)%IDEGFREE)=(ILOCAL_RECON5(1)%GRADIENTS(1,1:IELEM(N,I)%IDEGFREE,IEX))
-!                              call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				  
-				   CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-				  
+!                              GRAD1AL(1:IELEM(N,I)%IDEGFREE)=(ILOCAL_RECON5(1)%GRADIENTS(1,1:IELEM(N,I)%IDEGFREE,IEX))
+                             call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
 !                             call gemv(ILOCAL_RECON3(I)%INDICATORc(1:IDEGFREE2,1:IDEGFREE2),          &
 ! 				  GRAD1AL(1:IDEGFREE2),   &
 ! 				  INDICATEMATRIXAL(1:IDEGFREE2)     &
 ! 				  )
                             
-                             SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+                             SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
                               
                              
                             
                              ELSE
                              
                              GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC(ll,1:IDEGFREE2,IEX)
-!                              call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-! 				  GRAD1AL(1:IDEGFREE2),   &
-! 				  INDICATEMATRIXAL(1:IDEGFREE2)     &
-! 				  )
-				  
-				  CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-                    
-                             SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+                             call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+				  GRAD1AL(1:IDEGFREE2),   &
+				  INDICATEMATRIXAL(1:IDEGFREE2)     &
+				  )
+                             SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
                             
                              END IF
                              END DO
@@ -2379,17 +2137,12 @@ POWER=4
 ! 				  DO K=1,IELEM(N,I)%IDEGFREE
 					  GRAD1AL(1:IELEM(N,I)%IDEGFREE)=ILOCAL_RECON5(1)%GRADIENTS(LL,1:IELEM(N,I)%IDEGFREE,IEX)
 ! 				  END DO
-! 				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				  
-				   CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
 ! 				 
-				  SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+				  SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 				  
 
 			      END DO
@@ -2507,7 +2260,7 @@ POWER=4
                                     IF (LL.EQ.1)THEN
 
                                     
-				    RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+				    RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 
 				   CALL EXTRAPOLATE_BOUND(IEX,L,NGP,I,LL,ll)
 				    
@@ -2515,7 +2268,7 @@ POWER=4
 				    
 				    
 				    else
-				     RESSOLUTION(1,1) = DDOT(Idegfree2,CONSMATRIXC(1,1:Idegfree2),1,GRADSSL(1:Idegfree2,1),1)
+				     RESSOLUTION(1,1) = DOT(CONSMATRIXC(1,1:idegfree2),GRADSSL(1:idegfree2,1))
 ! 				     
 				    
 				    
@@ -2524,7 +2277,7 @@ POWER=4
 				    
 				    end if
 				    else
-				     RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+				     RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 ! 				    ILOCAL_RECON3(I)%ULEFT(IEX,L,NGP)=ILOCAL_RECON3(I)%ULEFT(IEX,L,NGP)&
 ! 				    +((U_C(I)%VAL(1,IEX)+RESSOLUTION(1,1))*WENO(IEX,LL))
 				    
@@ -2563,29 +2316,18 @@ POWER=4
 		    
                                 DO LL=1,IELEM(N,I)%ADMIS
                                         IF (LL.EQ.1)THEN
-!                                             call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-!                                             GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-!                                             INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-!                                             )
-                                            
-                                             CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-                                            
-                                            
-                                            SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+                                            call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+                                            GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+                                            INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+                                            )
+                                            SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
                                         else
                                             GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC2(ll,1:IDEGFREE2,IEX)
-!                                         call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-!                                             GRAD1AL(1:IDEGFREE2),   &
-!                                             INDICATEMATRIXAL(1:IDEGFREE2)     &
-!                                             )
-                                            
-                                            
-                                            CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-                                        SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+                                        call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+                                            GRAD1AL(1:IDEGFREE2),   &
+                                            INDICATEMATRIXAL(1:IDEGFREE2)     &
+                                            )
+                                        SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
                                         
                                         
                                         
@@ -2599,17 +2341,11 @@ POWER=4
 ! 			  DO K=1,IELEM(N,I)%idegfree
 			  GRAD1AL(1:IELEM(N,I)%idegfree)=ILOCAL_RECON5(1)%GRADIENTS2(LL,1:IELEM(N,I)%idegfree,IEX)
 ! 			  END DO
-! 		      call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				  
-             CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-
-		      SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+		      call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
+		      SMOOTHINDICATORAL(LL)= DOT_PRODUCT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 		    END DO
 		   
 		      
@@ -2718,13 +2454,13 @@ POWER=4
 ! 	    			END DO
                                     IF (EES.EQ.5)THEN
                                         IF (LL.EQ.1)THEN
-                                        RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
                                         else
-                                        RESSOLUTION(1,1) = DDOT(Idegfree2,CONSMATRIXC(1,1:Idegfree2),1,GRADSSL(1:Idegfree2,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIXc(1,1:Idegfree2),GRADSSL(1:Idegfree2,1))
                                     
                                         end if
                                     else
-                                     RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                     RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
                                     
                                     end if
                                     
@@ -3040,21 +2776,20 @@ POWER=4
                              DO LL=1,IELEM(N,I)%ADMIS
                              IF (LL.EQ.1)THEN
                              
-!                              call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				   CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+                             call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
                                 
-                             SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+                             SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
                              
                              
-
-                             
-                             
+!                               call gemv(ILOCAL_RECON3(I)%INDICATORc(1:IDEGFREE2,1:IDEGFREE2),          &
+! 				  GRAD1AL(1:IDEGFREE2),   &
+! 				  INDICATEMATRIXAL(1:IDEGFREE2)     &
+! 				  )
+!                             
+!                              SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
                              
                              
                              
@@ -3062,15 +2797,11 @@ POWER=4
                              ELSE
                              
                              GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC(ll,1:IDEGFREE2,IEX)
-!                              call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-! 				  GRAD1AL(1:IDEGFREE2),   &
-! 				  INDICATEMATRIXAL(1:IDEGFREE2)     &
-! 				  )
-				  
-				  CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-                             SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+                             call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+				  GRAD1AL(1:IDEGFREE2),   &
+				  INDICATEMATRIXAL(1:IDEGFREE2)     &
+				  )
+                             SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
                              
                              
                              END IF
@@ -3083,23 +2814,17 @@ POWER=4
 ! 				  DO K=1,IELEM(N,I)%IDEGFREE
 					  GRAD1AL(1:IELEM(N,I)%IDEGFREE)=ILOCAL_RECON5(1)%GRADIENTS(LL,1:IELEM(N,I)%IDEGFREE,IEX)
 ! 				  END DO
-! 				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				   CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-				  
+				  call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
 ! 				 
-				  SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+				  SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 				  
 				  
 				  
-
-				  
-				  
+! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE) = MATMUL(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),GRAD1AL(1:IELEM(N,I)%IDEGFREE))
+! 				  SMOOTHINDICATORAL(LL)= DOT_PRODUCT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 			      END DO
                               END IF
 			      LAMBDAAL(:)=1.0D0
@@ -3233,7 +2958,7 @@ POWER=4
 ! ! 	    			DO K=1,IELEM(N,I)%IDEGFREE
 ! 				GRADSSL(1:IELEM(N,I)%IDEGFREE,1)=ILOCAL_RECON5(1)%GRADIENTS(LL,1:IELEM(N,I)%IDEGFREE,IEX)
 ! ! 	    			END DO
-! 				    RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+! 				    RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 ! 				    !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1:1))
 ! 				    ILOCAL_RECON3(I)%ULEFT(IEX,L,NGP)=ILOCAL_RECON3(I)%ULEFT(IEX,L,NGP)&
 ! 				    +((U_C(I)%VAL(1,IEX)+RESSOLUTION(1,1))*WENO(IEX,LL))
@@ -3260,20 +2985,20 @@ POWER=4
                                     IF (LL.EQ.1)THEN
 
                                     
-				    RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+				    RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 				    
 				    
 				   CALL EXTRAPOLATE_BOUND(IEX,L,NGP,I,LL,ll)
 				    
 
 				    else
-				     RESSOLUTION(1,1) = DDOT(Idegfree2,CONSMATRIXC(1,1:Idegfree2),1,GRADSSL(1:Idegfree2,1),1)
+				     RESSOLUTION(1,1) = DOT(CONSMATRIXC(1,1:idegfree2),GRADSSL(1:idegfree2,1))
 !                                     
 				   CALL EXTRAPOLATE_BOUND(IEX,L,NGP,I,LL,ll)
 				    
 				    end if
 				    else
-				     RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+				     RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 				  CALL EXTRAPOLATE_BOUND(IEX,L,NGP,I,LL,ll)
 				    
 				    end if
@@ -3307,32 +3032,18 @@ POWER=4
 		    
                                 DO LL=1,IELEM(N,I)%ADMIS
                                         IF (LL.EQ.1)THEN
-!                                             call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-!                                             GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-!                                             INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-!                                             )
-                                            
-                                            
-                                             CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-                                            
-                                            
-                                            SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+                                            call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+                                            GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+                                            INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+                                            )
+                                            SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
                                         else
                                             GRAD1AL(1:IDEGFREE2)=ILOCAL_RECON5(1)%GRADIENTSC2(ll,1:IDEGFREE2,IEX)
-!                                         call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
-!                                             GRAD1AL(1:IDEGFREE2),   &
-!                                             INDICATEMATRIXAL(1:IDEGFREE2)     &
-!                                             )
-                                            
-                                            
-                                            CALL DGEMV('N', IDEGFREE2, IDEGFREE2,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),&
-                    IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,BETA,INDICATEMATRIXAL(1:IDEGFREE2),1)
-                                            
-                                            
-                                        SMOOTHINDICATORAL(LL)= DDOT(IDEGFREE2,GRAD1AL(1:IDEGFREE2),1,INDICATEMATRIXAL(1:IDEGFREE2),1)
+                                        call gemv(ILOCAL_RECON3(I)%INDICATORC(1:IDEGFREE2,1:IDEGFREE2),          &
+                                            GRAD1AL(1:IDEGFREE2),   &
+                                            INDICATEMATRIXAL(1:IDEGFREE2)     &
+                                            )
+                                        SMOOTHINDICATORAL(LL)= DOT(GRAD1AL(1:IDEGFREE2),INDICATEMATRIXAL(1:IDEGFREE2))
                                         
                                         
                                         
@@ -3346,18 +3057,11 @@ POWER=4
 ! 			  DO K=1,IELEM(N,I)%idegfree
 			  GRAD1AL(1:IELEM(N,I)%idegfree)=ILOCAL_RECON5(1)%GRADIENTS2(LL,1:IELEM(N,I)%idegfree,IEX)
 ! 			  END DO
-! 		      call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
-! 				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
-! 				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
-! 				  )
-				  
-				  
-             CALL DGEMV('N', IELEM(N,I)%IDEGFREE, IELEM(N,I)%IDEGFREE,ALPHA,&
-                    ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),&
-                    IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,BETA,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
-
-				  
-		      SMOOTHINDICATORAL(LL)= DDOT(IELEM(N,I)%IDEGFREE,GRAD1AL(1:IELEM(N,I)%IDEGFREE),1,INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE),1)
+		      call gemv(ILOCAL_RECON3(I)%INDICATOR(1:IELEM(N,I)%IDEGFREE,1:IELEM(N,I)%IDEGFREE),          &
+				  GRAD1AL(1:IELEM(N,I)%IDEGFREE),   &
+				  INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE)     &
+				  )
+		      SMOOTHINDICATORAL(LL)= DOT_PRODUCT(GRAD1AL(1:IELEM(N,I)%IDEGFREE),INDICATEMATRIXAL(1:IELEM(N,I)%IDEGFREE))
 		    END DO
 		   
 		      
@@ -3489,13 +3193,13 @@ POWER=4
 ! 	    			END DO
                                     IF (EES.EQ.5)THEN
                                         IF (LL.EQ.1)THEN
-                                        RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
                                         else
-                                        RESSOLUTION(1,1) = DDOT(Idegfree2,CONSMATRIXC(1,1:Idegfree2),1,GRADSSL(1:Idegfree2,1),1)
+                                        RESSOLUTION(1,1) = DOT(CONSMATRIXc(1,1:Idegfree2),GRADSSL(1:IDEGFREE2,1))
                                     
                                         end if
                                     else
-                                     RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+                                     RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
                                     
                                     end if
                                     
@@ -3736,7 +3440,7 @@ call  QUADRATUREQUAD3D(N,IGQRULES)
 ! 				
 ! ! 	    			END DO
 ! 				  
-! 				    RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+! 				    RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 ! 				    !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1:1))
 ! 				    ILOCAL_RECON3(I)%ULEFT(IEX,L,NGP)=U_C(I)%VAL(1,IEX)+RESSOLUTION(1,1)
 ! 				    
@@ -3766,7 +3470,7 @@ call  QUADRATUREQUAD3D(N,IGQRULES)
 ! 				
 ! ! 	    			END DO
 ! 				  
-! 				    RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+! 				    RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 ! 				    !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1:1))
 ! 				    ILOCAL_RECON3(I)%ULEFT(IEX,L,NGP)=U_C(I)%VAL(1,IEX)+RESSOLUTION(1,1)
 ! 				END DO	!COMPONENTS
@@ -3775,20 +3479,11 @@ call  QUADRATUREQUAD3D(N,IGQRULES)
 	
 				
 				GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES)=ILOCAL_RECON5(1)%GRADIENTS(1,1:IELEM(N,I)%IDEGFREE,1:NOF_VARIABLES)
-!                                 call gemm(                                                  &
-!                             CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
-!                             GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
-!                             RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-!                                 )
-                                
-                                CALL DGEMM('N','N',ICD,nof_variables,IELEM(N,I)%IDEGFREE,ALPHA,&
-                    CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),ICD,&
-                    GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),&
-                    IELEM(N,I)%IDEGFREE,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
-                                
-                                
-                                
-                                
+                                call gemm(                                                  &
+                            CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
+                            GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
+                            RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+                                )
                                 ICD=0
                                 DO L=1,IELEM(N,I)%IFCA
                                     if (ielem(n,i)%types_faces(L).eq.5)then
@@ -3853,7 +3548,6 @@ SUBROUTINE LINEAR_SCHEME2d(N)
 IMPLICIT NONE
 INTEGER,INTENT(IN)::N
 INTEGER::I,K,KMAXE,IDUMMY,L,NND,IQP,NGP,IEX,IDFR
-REAL,EXTERNAL::DDOT
 ! REAL::NDMAX,NDMIN,NFMIN,NFMAX
 KMAXE=XMPIELRANK(N)
 
@@ -3959,7 +3653,7 @@ call  QUADRATUREline(N,IGQRULES)
 ! 	    			DO K=1,IELEM(N,I)%IDEGFREE
 				GRADSSL(1:IELEM(N,I)%IDEGFREE,1)=ILOCAL_RECON5(1)%GRADIENTS(1,1:IELEM(N,I)%IDEGFREE,IEX)
 ! 	    			END DO
-				    RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+				    RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 				    
 				    
 				    
@@ -3995,7 +3689,6 @@ INTEGER::I,K,KMAXE,IDUMMY,L,NND,IQP,NGP,IEX,IDFR,sols,ihgt,ihgj
 REAL::solm,NDMAX,NDMIN,NFMIN,NFMAX,SOLD,solm2,SOLC
 real,dimension(90)::polyfun,grad_m
 real,dimension(2)::grad_1,sold2
-real,external::ddot
 integer::ixg
 KMAXE=XMPIELRANK(N)
 
@@ -4077,7 +3770,7 @@ KMAXE=XMPIELRANK(N)
 ! 	    			DO K=1,IELEM(N,I)%IDEGFREE
 				GRADSSL(1:IELEM(N,I)%IDEGFREE,1)=ILOCAL_RECON5(1)%GRADIENTS(1,1:IELEM(N,I)%IDEGFREE,1)
 ! 	    			END DO
-				    RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSSL(1:IELEM(N,I)%IDEGFREE,1),1)
+				    RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSSL(1:IELEM(N,I)%IDEGFREE,1))
 				    
 ! 				    sold=solm+RESSOLUTION(1,1)
  				    sold=U_C(I)%VAL(1,1)+RESSOLUTION(1,1)
@@ -4107,7 +3800,6 @@ INTEGER,INTENT(IN)::N
 INTEGER::I,J,K,L,IEX,IEUL,JX,LX,KMAXE,iq,LL,NGP,NND,IQP,idummy,ii,icd
 REAL::UMIN,UMAX,PSITOT,ADDC,DIVG0,LIMVBG
 REAL,DIMENSION(NUMBEROFPOINTS2)::WEIGHTS_Q,WEIGHTS_T
-real,external::ddot
 
 
 KMAXE=XMPIELRANK(N)
@@ -4243,20 +3935,11 @@ call QUADRATURETRIANG(N,IGQRULES); WEIGHTS_T(1:QP_TRIANGLE)=WEQUA2D(1:QP_TRIANGL
 					  GRADSS(1:IELEM(N,I)%IDEGFREE,1:NOF_VARIABLES)=ILOCAL_RECON5(1)%GRADIENTS(1,1:IELEM(N,I)%IDEGFREE,1:NOF_VARIABLES)
 				      
                                            
-! 				  call gemm(                                                  &
-!                             CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
-!                             GRADSS(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
-!                             RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-!                                 )
-                                
-                                
-                                
-                CALL DGEMM('N','N',ICD,nof_variables,IELEM(N,I)%IDEGFREE,ALPHA,&
-                    CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),ICD,&
-                    GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),&
-                    IELEM(N,I)%IDEGFREE,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
-                                
-                                
+				  call gemm(                                                  &
+                            CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
+                            GRADSS(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
+                            RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+                                )
                                 ICD=0
                                 DO L=1,IELEM(N,I)%IFCA
                                     if (ielem(n,i)%types_faces(L).eq.5)then
@@ -4490,8 +4173,7 @@ call QUADRATURETRIANG(N,IGQRULES); WEIGHTS_T(1:QP_TRIANGLE)=WEQUA2D(1:QP_TRIANGL
 
 				  DO IEX=1,TURBULENCEEQUATIONS+PASSIVESCALAR
 ! 				  GRADSS(1:IELEM(N,I)%IDEGFREE,1)=GRADSS(1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
-				  RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSS(1:IELEM(N,I)%IDEGFREE,IEX),1)
+				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
 				 
 				  !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX:IEX))
 				  USOL(IEX,L,Ngp)=((U_CT(I)%VAL(1,IEX)+RESSOLUTION(1,1)))
@@ -4859,20 +4541,11 @@ call QUADRATURETRIANG(N,IGQRULES); WEIGHTS_T(1:QP_TRIANGLE)=WEQUA2D(1:QP_TRIANGL
 ! 					  end if
 				      
 
-! 				 call gemm(                                                  &
-!                             CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
-!                             GRADSS(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
-!                             RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
-!                                 )
-                                
-                                
-                                
-                                CALL DGEMM('N','N',ICD,nof_variables,IELEM(N,I)%IDEGFREE,ALPHA,&
-                    CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),ICD,&
-                    GRADSSL(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),&
-                    IELEM(N,I)%IDEGFREE,BETA,RESSOLUTION(1:ICD,1:NOF_vARIABLES),ICD)
-                                
-                                
+				 call gemm(                                                  &
+                            CONSMATRIX(1:ICD,1:IELEM(N,I)%IDEGFREE),                &
+                            GRADSS(1:IELEM(N,I)%IDEGFREE,1:NOF_vARIABLES),                                                &
+                            RESSOLUTION(1:ICD,1:NOF_vARIABLES)                                                    &
+                                )
                                 ICD=0
                                 DO L=1,IELEM(N,I)%IFCA
                                     if (ielem(n,i)%types_faces(L).eq.5)then
@@ -5257,8 +4930,7 @@ call QUADRATURETRIANG(N,IGQRULES); WEIGHTS_T(1:QP_TRIANGLE)=WEQUA2D(1:QP_TRIANGL
 
 				  DO IEX=1,TURBULENCEEQUATIONS+PASSIVESCALAR		      
 ! 				   GRADSS(1:IELEM(N,I)%IDEGFREE,1)=GRADSS(1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
-				  RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSS(1:IELEM(N,I)%IDEGFREE,IEX),1)
+				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
 				  !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX:IEX))
 				  
 				  USOL(IEX,L,Ngp)=((U_CT(I)%VAL(1,IEX)+RESSOLUTION(1,1)))
@@ -5543,7 +5215,6 @@ SUBROUTINE MUSCL2d(N)
 INTEGER,INTENT(IN)::N
 INTEGER::I,J,K,L,IEX,IEUL,JX,LX,KMAXE,iq,LL,NGP,NND,IQP,idummy,ii
 REAL::UMIN,UMAX,PSITOT,ADDC,DIVG0,LIMVBG
-real,external::ddot
 
 
 KMAXE=XMPIELRANK(N)
@@ -5683,8 +5354,7 @@ call  QUADRATURELINE(N,IGQRULES)
 				  DO IEX=1,NOF_VARIABLES
 				  
 ! 				   GRADSS(1:IELEM(N,I)%IDEGFREE,1)=GRADSS(1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
-				  RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSS(1:IELEM(N,I)%IDEGFREE,IEX),1)
+				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
 				  !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX:IEX))
 				  USOL(IEX,L,Ngp)=((U_C(I)%VAL(1,IEX)+RESSOLUTION(1,1)))
 				  END DO	 
@@ -5877,8 +5547,7 @@ call  QUADRATURELINE(N,IGQRULES)
 				  DO IEX=1,TURBULENCEEQUATIONS+PASSIVESCALAR
 				  
 ! 				   GRADSS(1:IELEM(N,I)%IDEGFREE,1)=GRADSS(1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
-				  RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSS(1:IELEM(N,I)%IDEGFREE,IEX),1)
+				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
 				  !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX:IEX))
 				  USOL(IEX,L,Ngp)=((U_CT(I)%VAL(1,IEX)+RESSOLUTION(1,1)))
 				  END DO	 
@@ -6205,8 +5874,7 @@ call  QUADRATURELINE(N,IGQRULES)
 
 				  DO IEX=1,NOF_VARIABLES		      
 ! 				   GRADSS(1:IELEM(N,I)%IDEGFREE,1)=GRADSS(1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
-				  RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSS(1:IELEM(N,I)%IDEGFREE,IEX),1)
+				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
 				  !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX:IEX))
 				  
 				  USOL(IEX,L,Ngp)=((U_C(I)%VAL(1,IEX)+RESSOLUTION(1,1)))
@@ -6500,8 +6168,7 @@ call  QUADRATURELINE(N,IGQRULES)
 				  
 				  DO IEX=1,TURBULENCEEQUATIONS+PASSIVESCALAR		      
 ! 				   GRADSS(1:IELEM(N,I)%IDEGFREE,1)=GRADSS(1:IELEM(N,I)%IDEGFREE,IEX)
-! 				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
-				  RESSOLUTION(1,1) = DDOT(IELEM(N,I)%IDEGFREE,CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),1,GRADSS(1:IELEM(N,I)%IDEGFREE,IEX),1)
+				  RESSOLUTION(1,1) = DOT(CONSMATRIX(1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX))
 				  !RESSOLUTION(1:1,1:1)=MATMUL(CONSMATRIX(1:1,1:IELEM(N,I)%IDEGFREE),GRADSS(1:IELEM(N,I)%IDEGFREE,IEX:IEX))
 				  
 				  USOL(IEX,L,Ngp)=((U_CT(I)%VAL(1,IEX)+RESSOLUTION(1,1)))
@@ -7228,7 +6895,6 @@ INTEGER,INTENT(IN)::N,ICONSIDERED
 INTEGER::I,J,K,L,M,PPP,IEUL,IEX,IHGT,IHGJ,KMAXE,DECOMF,ICNN,IQDR,NVAR,idummy,iqp,nnd,ngp,icd
 REAL::RAA1,RAA2,PAA1,PAA2
 REAL::SOLX
-REAL,EXTERNAL::DDOT
 REAL,DIMENSION(NUMBEROFPOINTS2)::WEIGHTS_Q,WEIGHTS_T
 
 
@@ -7357,18 +7023,9 @@ END IF
 					    GRADTEM(1:IELEM(N,I)%IDEGFREE)=ILOCAL_RECON5(1)%GRADIENTSTURB(1:IELEM(N,I)%IDEGFREE,K,NVAR)
 				   
 					    UGRADLOC = ZERO
-! 					     UGRADLOC(1)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),XXDER(1:IELEM(N,I)%IDEGFREE,ICD))
-! 					    UGRADLOC(2)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),YYDER(1:IELEM(N,I)%IDEGFREE,ICD))
-! 					    UGRADLOC(3)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),ZZDER(1:IELEM(N,I)%IDEGFREE,ICD))
-					    
-                UGRADLOC(1)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,XXDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-                UGRADLOC(2)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,YYDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-                UGRADLOC(3)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,ZZDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-                
-					     
-					    
-					    
-					    
+					     UGRADLOC(1)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),XXDER(1:IELEM(N,I)%IDEGFREE,ICD))
+					    UGRADLOC(2)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),YYDER(1:IELEM(N,I)%IDEGFREE,ICD))
+					    UGRADLOC(3)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),ZZDER(1:IELEM(N,I)%IDEGFREE,ICD))
 				    if (reduce_comp.eq.1)then
 				    ILOCAL_RECON3(I)%ULEFTTURBV(1:3,NVAR,L,1) = ILOCAL_RECON3(I)%ULEFTTURBV(1:3,NVAR,L,1)+MATMUL(AINVJT(1:3,1:3),UGRADLOC(1:3))*WEIGHT_T2(NGP)
 				    ELSE
@@ -7382,15 +7039,9 @@ END IF
 					GRADTEM(1:IELEM(N,I)%IDEGFREE)=ILOCAL_RECON5(1)%GRADIENTSTEMP(1:IELEM(N,I)%IDEGFREE)
 ! 				
 					UGRADLOC = ZERO
-! 					     UGRADLOC(1)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),XXDER(1:IELEM(N,I)%IDEGFREE,ICD))
-! 					    UGRADLOC(2)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),YYDER(1:IELEM(N,I)%IDEGFREE,ICD))
-! 					    UGRADLOC(3)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),ZZDER(1:IELEM(N,I)%IDEGFREE,ICD))
-					    
-					     UGRADLOC(1)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,XXDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-                UGRADLOC(2)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,YYDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-                UGRADLOC(3)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,ZZDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-					    
-					    
+					     UGRADLOC(1)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),XXDER(1:IELEM(N,I)%IDEGFREE,ICD))
+					    UGRADLOC(2)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),YYDER(1:IELEM(N,I)%IDEGFREE,ICD))
+					    UGRADLOC(3)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),ZZDER(1:IELEM(N,I)%IDEGFREE,ICD))
 					    if (reduce_comp.eq.1)then
 					  ILOCAL_RECON3(I)%ULEFTV(1:3,1,L,1) =ILOCAL_RECON3(I)%ULEFTV(1:3,1,L,1)+ MATMUL(AINVJT(1:3,1:3),UGRADLOC(1:3))*WEIGHT_T2(NGP)
 					  ELSE
@@ -7402,14 +7053,9 @@ END IF
 					GRADTEM(1:IELEM(N,I)%IDEGFREE)=ILOCAL_RECON5(1)%VELOCITYDOF(IEX,1:IELEM(N,I)%IDEGFREE)
 ! 		
 					 UGRADLOC = ZERO
-! 					     UGRADLOC(1)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),XXDER(1:IELEM(N,I)%IDEGFREE,ICD))
-! 					    UGRADLOC(2)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),YYDER(1:IELEM(N,I)%IDEGFREE,ICD))
-! 					    UGRADLOC(3)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),ZZDER(1:IELEM(N,I)%IDEGFREE,ICD))
-					    
-					     UGRADLOC(1)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,XXDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-                UGRADLOC(2)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,YYDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-                UGRADLOC(3)=DDOT(IELEM(N,I)%IDEGFREE,GRADTEM(1:IELEM(N,I)%IDEGFREE),1,ZZDER(1:IELEM(N,I)%IDEGFREE,ICD),1)
-					    
+					     UGRADLOC(1)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),XXDER(1:IELEM(N,I)%IDEGFREE,ICD))
+					    UGRADLOC(2)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),YYDER(1:IELEM(N,I)%IDEGFREE,ICD))
+					    UGRADLOC(3)=DOT(GRADTEM(1:IELEM(N,I)%IDEGFREE),ZZDER(1:IELEM(N,I)%IDEGFREE,ICD))
 					    if (reduce_comp.eq.1)then
 					  ILOCAL_RECON3(I)%ULEFTV(1:3,IEX+1,L,1) = ILOCAL_RECON3(I)%ULEFTV(1:3,IEX+1,L,1)+MATMUL(AINVJT(1:3,1:3),UGRADLOC(1:3))*WEIGHT_T2(NGP)
 					  ELSE
@@ -7568,11 +7214,11 @@ psi2=zero
 					  D2=USOL(IEX,L,NGP)-UTEMP(1,IEX)
 
 
-					  IF (ABS(D2).LE.ZERO)THEN
+					  IF (ABS(D2).LT.tolsmall)THEN
 
 					  PSI(iex,L,ngp)=1.0D0
 
-					  ELSE IF (D2.GT.zero)THEN
+					  ELSE IF (D2.GE.tolsmall)THEN
 					 SFD=(UTMAX(iex)-UTEMP(1,IEX))/D2
 
 					      
@@ -7730,7 +7376,7 @@ psi2=zero
 					      
 					      CASE(4)                  !VKM
 					      DMIN=USOL(iex,L,ngp)-UTEMP(1,IEX)
-					      dmin=sign(1.0d0,dmin)*(abs(dmin)+tolsmall)
+					      dmin=sign(1.0,dmin)*(abs(dmin)+tolsmall)
 					      DPLUS=UTMAX(IEX)-UTEMP(1,IEX)
 					      EPSI2=(KAPPA_VEN*IELEM(N,I)%MINEDGE)**3
 					      PSI(iex,L,ngp)=(1.0D0/(DMIN))*(((((DPLUS**2)+EPSI2)*DMIN)+(2.0D0*(DMIN**2)*DPLUS))/((DPLUS**2)+(2.0D0*DMIN**2)+(DMIN*DPLUS)+EPSI2))
@@ -7775,7 +7421,7 @@ psi2=zero
 					      PSI(iex,L,ngp)= 2.0d0*SFD / (SFD + 1.0d0) 				! VAN LEER
 					      CASE(7)								!VENKATAKRISHNAN
 					      DMIN=USOL(iex,L,ngp)-UTEMP(1,IEX)
-					      dmin=sign(1.0d0,dmin)*(abs(dmin)+tolsmall)
+					      dmin=sign(1.0,dmin)*(abs(dmin)+tolsmall)
 					      DPLUS=UTMAX(IEX)-UTEMP(1,IEX)
 					      EPSI2=(KAPPA_VEN*IELEM(N,I)%MINEDGE)**3
 					      PSI(iex,L,ngp)=(1.0D0/(DMIN))*(((((DPLUS**2)+EPSI2)*DMIN)+(2.0D0*(DMIN**2)*DPLUS))/((DPLUS**2)+(2.0D0*DMIN**2)+(DMIN*DPLUS)+EPSI2))
@@ -7783,7 +7429,7 @@ psi2=zero
 					      
 					       CASE(8)								!VENKATAKRISHNAN
 					      DMIN=USOL(iex,L,ngp)-UTEMP(1,IEX)
-					      dmin=sign(1.0d0,dmin)*(abs(dmin)+tolsmall)
+					      dmin=sign(1.0,dmin)*(abs(dmin)+tolsmall)
 					      DPLUS=UTMAX(IEX)-UTEMP(1,IEX)
 					      EPSI2=(KAPPA_VEN*IELEM(N,I)%MINEDGE)**3
 					      PSI(iex,L,ngp)=(1.0D0/(DMIN))*(((((DPLUS**2)+EPSI2)*DMIN)+(2.0D0*(DMIN**2)*DPLUS))/((DPLUS**2)+(2.0D0*DMIN**2)+(DMIN*DPLUS)+EPSI2))
@@ -7975,7 +7621,7 @@ psi2=zero
 					      
 					      CASE(4)
 					      DMIN=USOL(iex,L,ngp)-UTEMP(1,IEX)
-					       dmin=sign(1.0d0,dmin)*(abs(dmin)+tolsmall)
+					       dmin=sign(1.0,dmin)*(abs(dmin)+tolsmall)
 					      DPLUS=UTMIN(IEX)-UTEMP(1,IEX)
 					      EPSI2=(KAPPA_VEN*IELEM(N,I)%MINEDGE)**3
 					      PSI(iex,L,ngp)=(1.0D0/(DMIN))*(((((DPLUS**2)+EPSI2)*DMIN)+(2.0D0*(DMIN**2)*DPLUS))/((DPLUS**2)+(2.0D0*DMIN**2)+(DMIN*DPLUS)+EPSI2)) 
@@ -8020,13 +7666,13 @@ psi2=zero
 					      PSI(iex,L,ngp)= 2.0d0*SFD / (SFD + 1.0d0) 					! VAN LEER
 					      CASE(7)								!VENKATAKRISHNAN
 					      DMIN=USOL(iex,L,ngp)-UTEMP(1,IEX)
-					       dmin=sign(1.0d0,dmin)*(abs(dmin)+tolsmall)
+					       dmin=sign(1.0,dmin)*(abs(dmin)+tolsmall)
 					      DPLUS=UTMIN(IEX)-UTEMP(1,IEX)
 					      EPSI2=(KAPPA_VEN*IELEM(N,I)%MINEDGE)**3
 					      PSI(iex,L,ngp)=(1.0D0/(DMIN))*(((((DPLUS**2)+EPSI2)*DMIN)+(2.0D0*(DMIN**2)*DPLUS))/((DPLUS**2)+(2.0D0*DMIN**2)+(DMIN*DPLUS)+EPSI2)) 
 					      CASE(8)								!VENKATAKRISHNAN
 					      DMIN=USOL(iex,L,ngp)-UTEMP(1,IEX)
-					       dmin=sign(1.0d0,dmin)*(abs(dmin)+tolsmall)
+					       dmin=sign(1.0,dmin)*(abs(dmin)+tolsmall)
 					      DPLUS=UTMIN(IEX)-UTEMP(1,IEX)
 					      EPSI2=(KAPPA_VEN*IELEM(N,I)%MINEDGE)**3
 					      PSI(iex,L,ngp)=(1.0D0/(DMIN))*(((((DPLUS**2)+EPSI2)*DMIN)+(2.0D0*(DMIN**2)*DPLUS))/((DPLUS**2)+(2.0D0*DMIN**2)+(DMIN*DPLUS)+EPSI2)) 

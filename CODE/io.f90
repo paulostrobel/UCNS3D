@@ -1175,7 +1175,7 @@ Valuelocation(:)=0
 		
     
 		DO I=1,KMAXE
-		  leftv(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+		  leftv(1:5)=U_C(I)%VAL(1,1:5)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(5)
 		END DO
@@ -1612,7 +1612,7 @@ Valuelocation(:)=0
 		end do
     
 		DO I=1,KMAXE
-		  leftv(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+		  leftv(1:5)=U_C(I)%VAL(1,1:5)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(5)
 		END DO
@@ -2042,7 +2042,7 @@ Valuelocation(:)=0
 		end do
     
 		DO I=1,KMAXE
-		  leftv(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+		  leftv(1:4)=U_C(I)%VAL(1,1:4)
 		  CALL CONS2PRIM2d(N)
 		  VALUESS(i)=ielem(n,i)%condition!leftv(4)
 		END DO
@@ -2500,12 +2500,10 @@ Valuelocation(:)=0
     IF (ITESTCASE.ge.3)THEN
 		do kkd=1,4
 		DO I=1,KMAXE
-          leftv(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
-		  CALL CONS2PRIM2D(N)
-		  VALUESS(i)=leftv(kkd)
-          if (KKD.EQ.4)THEN
-          VALUESS(i)=U_C(I)%VAL(1,KKD)
-          END IF
+		  VALUESS(i)=U_C(I)%VAL(1,kkd)
+		  if (kkd.ge.2.and.kkd.le.3)then
+		  VALUESS(i)=U_C(I)%VAL(1,kkd)/U_C(I)%VAL(1,1)
+		  end if
 		END DO
 		
 		
@@ -2520,7 +2518,7 @@ Valuelocation(:)=0
 		end do
     
 		DO I=1,KMAXE
-		  leftv(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+		  leftv(1:4)=U_C(I)%VAL(1,1:4)
 		  CALL CONS2PRIM2D(N)
 		  VALUESS(i)=leftv(4)
 		END DO
@@ -2535,15 +2533,11 @@ Valuelocation(:)=0
 		ierr = TECDAT112(imaxe,xbin,1)
 		END IF
     
-                if (multispecies.eq.1)then
-                DO I=1,KMAXE
-                VALUESS(i)=U_C(I)%VAL(1,5)
-                END DO
-                else
+    
                 DO I=1,KMAXE
                 VALUESS(i)=IELEM(N,I)%ADMIS
                 END DO
-                end if
+                
                 call MPI_GATHERv(valuess,xmpiall(n),MPI_DOUBLE_PRECISION,xbin2,xmpiall,offset,mpi_DOUBLE_PRECISION,0,MPI_COMM_WORLD,IERROR)
 
 		IF (N.EQ.0)THEN
@@ -2552,16 +2546,10 @@ Valuelocation(:)=0
 		end do
 		ierr = TECDAT112(imaxe,xbin,1)
 		END IF
-                if (multispecies.eq.1)then
-                DO I=1,KMAXE
-                VALUESS(i)=U_C(I)%VAL(1,6)
-                END DO
-                else
+                
                 DO I=1,KMAXE
                 VALUESS(i)=IELEM(N,I)%STENCIL_DIST
                 END DO
-                end if
-                
                 
                call MPI_GATHERv(valuess,xmpiall(n),MPI_DOUBLE_PRECISION,xbin2,xmpiall,offset,mpi_DOUBLE_PRECISION,0,MPI_COMM_WORLD,IERROR)
 
@@ -2611,16 +2599,9 @@ Valuelocation(:)=0
 		  
 		  
 		   if (itestcase.eq.3)then
-                            if (multispecies.eq.1)then
-                DO I=1,KMAXE
-                VALUESS(i)=U_C(I)%VAL(1,7)
-                END DO
-                else
-                DO I=1,KMAXE
-                VALUESS(i)=ielem(n,i)%vortex(1)
-                END DO
-                end if
-                            
+		    DO I=1,KMAXE
+                                VALUESS(i)=ielem(n,i)%vortex(1)
+                            END DO
                             
                             
                             call MPI_GATHERv(valuess,xmpiall(n),MPI_DOUBLE_PRECISION,xbin2,xmpiall,offset,mpi_DOUBLE_PRECISION,0,MPI_COMM_WORLD,IERROR)
@@ -2954,7 +2935,7 @@ SUBROUTINE READ_UCNS3D
  	Integer :: INV
  	Real :: angledum
 	CHARACTER(48)::STAMP1
-	LOGICAL::HERE1,HERE2
+	LOGICAL::HERE1
 
 
  	
@@ -2967,24 +2948,6 @@ SUBROUTINE READ_UCNS3D
 	end if
 	
 	
-	
-	
-	
-	INQUIRE (FILE='MULTISPECIES.DAT',EXIST=HERE2)
-	IF (HERE2) THEN
-	MULTISPECIES=1
-	OPEN(14,FILE='MULTISPECIES.DAT',FORM='FORMATTED',STATUS='OLD',ACTION='READ')
-	READ(14,*)
-	READ(14,*)
-	READ(14,*)NOF_SPECIES
-    ALLOCATE(GAMMA_IN(1:NOF_SPECIES),MP_A_IN(1:NOF_SPECIES),MP_R_IN(1:NOF_SPECIES),MP_PINF(1:NOF_SPECIES))
-    READ(14,*)GAMMA_IN(1:NOF_SPECIES)
-    READ(14,*)MP_A_IN(1:NOF_SPECIES)
-    READ(14,*)MP_R_IN(1:NOF_SPECIES)
-    READ(14,*)MP_PINF(1:NOF_SPECIES)
-	ELSE
-	MULTISPECIES=0
-	END IF
 
 
 	
@@ -3345,8 +3308,6 @@ SUBROUTINE READ_UCNS3D
 		  else
 		      nof_variables=4;dims=2
 		  end if
-		  
-		  
 	      else
 		  nof_variables=1
 		    if (dimensiona.eq.3)then
@@ -3355,17 +3316,6 @@ SUBROUTINE READ_UCNS3D
 		    dims=2
 		    end if
 	      end if
-	      
-	      !multiphase modification starts
-	      IF (governingequations.EQ.-1)THEN
-	      if (dimensiona.eq.3)then
-		      nof_variables=5+NOF_SPECIES+(NOF_SPECIES-1);dims=3
-		  else
-		      nof_variables=4+NOF_SPECIES+(NOF_SPECIES-1);dims=2
-		  end if
-		  END IF
-		  !multiphase modification ends
-		  
 	    !--------------------------END 2-------------------------!
 
 
@@ -3388,14 +3338,7 @@ SUBROUTINE READ_UCNS3D
 	   !EQUATIONS TYPE
 	   
 	   SELECT CASE(governingequations)
-	   CASE(-1)
-	   !MULTI-PHASE INVISCID EULER EQUATIONS
-	    IF (N.EQ.0)THEN
-	      OPEN(63,FILE='history.txt',FORM='FORMATTED',ACTION='WRITE',POSITION='APPEND')
-	      write(63,*)'Multi-Phase inviscid Euler Solver Engaged'
-	      CLOSE(63)
-	    END IF
-	    ITESTCASE = 3;IVORTEX = 0
+	   
 	   
 	   CASE(1)
 	   !NAVIER STOKES EQUATIONS
@@ -6903,7 +6846,7 @@ IF (ITESTCASE.LE.2)THEN
                                                
 					  
                                             
-						leftv(1:nof_Variables)=U_C(IBOUND_T(I))%VAL(1,1:nof_Variables)
+						leftv(1:5)=U_C(IBOUND_T(I))%VAL(1,1:5)
 						CALL CONS2PRIM(N)
 						VALUESS(i)=leftv(5)
 						
@@ -7459,7 +7402,7 @@ IF (ITESTCASE.LE.2)THEN
     
 		      IF (TOTIW.GT.0)THEN
 					  DO I=1,TOTIW
-					  leftv(1:nof_Variables)=U_C(IBOUND_T(I))%VAL(1,1:nof_Variables)
+					  leftv(1:4)=U_C(IBOUND_T(I))%VAL(1,1:4)
 				    CALL CONS2PRIM2d(N)
 				    VALUESS(i)=leftv(4)
 					end do	
@@ -8008,7 +7951,7 @@ IF (ITESTCASE.LE.2)THEN
 		      DO I=1,n_boundaries
 			      if ((ibound(n,i)%icode.eq.4).and.(IBOUND(N,i)%which.gt.0)) then
 				    icount_wall=icount_wall+1
-				    leftv(1:nof_Variables)=U_C(IBOUND(N,i)%which)%VAL(1,1:nof_Variables)
+				    leftv(1:5)=U_C(IBOUND(N,i)%which)%VAL(1,1:5)
 				    CALL CONS2PRIM(N)
 				    VALUESS(icount_wall)=leftv(5)
 				  
@@ -8632,7 +8575,7 @@ IF (ITESTCASE.LE.2)THEN
 		      DO I=1,n_boundaries
 			      if ((ibound(n,i)%icode.eq.4).and.(IBOUND(N,i)%which.gt.0)) then
 				    icount_wall=icount_wall+1
-				    leftv(1:nof_Variables)=U_C(IBOUND(N,i)%which)%VAL(1,1:nof_Variables)
+				    leftv(1:4)=U_C(IBOUND(N,i)%which)%VAL(1,1:4)
 				    CALL CONS2PRIM2d(N)
 				    VALUESS(icount_wall)=leftv(4)
 				  
@@ -9029,7 +8972,7 @@ Valuelocation(:)=0
 		  VALUESS(i)=U_C(I)%VAL(ind1,kkd)/U_C(I)%VAL(ind1,1)
 		  end if
 		  if (kkd.eq.5)then
-		   leftv(1:nof_Variables)=U_C(I)%VAL(ind1,1:nof_Variables)
+		   leftv(1:5)=U_C(I)%VAL(ind1,1:5)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(5)
 		  
@@ -9305,7 +9248,7 @@ Valuelocation(:)=0
 		  VALUESS(i)=U_C(I)%VAL(ind1,kkd)/U_C(I)%VAL(ind1,1)
 		  end if
 		  if (kkd.eq.4)then
-		   leftv(1:nof_Variables)=U_C(I)%VAL(ind1,1:nof_Variables)
+		   leftv(1:4)=U_C(I)%VAL(ind1,1:4)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(4)
 		  
@@ -9545,7 +9488,7 @@ allocate (Valuelocation(nvar1))
 		  VALUESS(i)=U_C(I)%VAL(5,kkd)/U_C(I)%VAL(5,1)
 		  end if
 		  if (kkd.eq.5)then
-		   leftv(1:nof_Variables)=U_C(I)%VAL(5,1:nof_Variables)
+		   leftv(1:5)=U_C(I)%VAL(5,1:5)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(5)
 		  
@@ -9812,7 +9755,7 @@ Valuelocation(:)=0
 		  VALUESS(i)=U_C(I)%VAL(5,kkd)/U_C(I)%VAL(5,1)
 		  end if
 		  if (kkd.eq.4)then
-		   leftv(1:nof_Variables)=U_C(I)%VAL(5,1:nof_Variables)
+		   leftv(1:4)=U_C(I)%VAL(5,1:4)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(4)
 		  
@@ -10219,7 +10162,7 @@ IF (ITESTCASE.LE.2)THEN
     
 					  IF (TOTIW.GT.0)THEN
 					  DO I=1,TOTIW
-					        leftv(1:nof_Variables)=U_C(IBOUND_T(I))%VAL(ind1,1:nof_Variables)
+					        leftv(1:5)=U_C(IBOUND_T(I))%VAL(ind1,1:5)
 						
 						CALL CONS2PRIM(N)
 				    VALUESS(i)=leftv(5)
@@ -10777,7 +10720,7 @@ IF (ITESTCASE.LE.2)THEN
     
 		      IF (TOTIW.GT.0)THEN
 					  DO I=1,TOTIW
-						leftv(1:nof_Variables)=U_C(IBOUND_T(I))%VAL(5,1:nof_Variables)
+						leftv(1:4)=U_C(IBOUND_T(I))%VAL(5,1:4)
 						CALL CONS2PRIM2d(N)
 					  VALUESS(i)=leftv(4)
 					  ENDDO
@@ -11301,7 +11244,7 @@ IF (ITESTCASE.LE.2)THEN
 		      DO I=1,n_boundaries
 			      if ((ibound(n,i)%icode.eq.4).and.(IBOUND(N,i)%which.gt.0)) then
 				    icount_wall=icount_wall+1
-				    leftv(1:nof_Variables)=U_C(IBOUND(N,i)%which)%VAL(5,1:nof_Variables)
+				    leftv(1:5)=U_C(IBOUND(N,i)%which)%VAL(5,1:5)
 				    CALL CONS2PRIM(N)
 				    VALUESS(icount_wall)=leftv(5)
 				  
@@ -11925,7 +11868,7 @@ IF (ITESTCASE.LE.2)THEN
 		      DO I=1,n_boundaries
 			      if ((ibound(n,i)%icode.eq.4).and.(IBOUND(N,i)%which.gt.0)) then
 				    icount_wall=icount_wall+1
-				    leftv(1:nof_Variables)=U_C(IBOUND(N,i)%which)%VAL(5,1:nof_Variables)
+				    leftv(1:4)=U_C(IBOUND(N,i)%which)%VAL(5,1:4)
 				    CALL CONS2PRIM(N)
 				    VALUESS(icount_wall)=leftv(4)
 				  
@@ -12747,7 +12690,7 @@ END IF
     IF (N.EQ.0)THEN
 
     DO I=1,IMAXE
-    WRITE(1086)XBIN(i,1:nof_Variables+TURBULENCEEQUATIONS+PASSIVESCALAR)
+    WRITE(1086)XBIN(i,1:5+TURBULENCEEQUATIONS+PASSIVESCALAR)
     END DO
 
     DEALLOCATE(XBIN,ICELLA,VALUESA)
@@ -12819,7 +12762,7 @@ DEALLOCATE(VALUESS)
 !     IF (N.EQ.0)THEN
 ! 
 !     DO I=1,IMAXE
-!     WRITE(1086)XBIN(i,1:nof_Variables+TURBULENCEEQUATIONS+PASSIVESCALAR)
+!     WRITE(1086)XBIN(i,1:5+TURBULENCEEQUATIONS+PASSIVESCALAR)
 !     END DO
 ! 
 !     DEALLOCATE(XBIN,ICELLA,VALUESA)
@@ -13559,7 +13502,7 @@ CALL MPI_BARRIER(MPI_COMM_WORLD,IERROR)
     DO I=1,IMAXE
      WRITE(1086)I
 !     DO NVAR=1,5+TURBULENCEEQUATIONS+PASSIVESCALAR
-    WRITE(1086)XBIN(xmpi_re(i),1:nof_Variables+TURBULENCEEQUATIONS+PASSIVESCALAR+3+PASSIVESCALAR)
+    WRITE(1086)XBIN(xmpi_re(i),1:4+TURBULENCEEQUATIONS+PASSIVESCALAR+3+PASSIVESCALAR)
 !     END DO
     END DO
       
@@ -13770,8 +13713,8 @@ DO I=1,kmaxe
 				 end if
 				  
 				  
-				  LEFTV(1:nof_Variables)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
-				  RIGHTV(1:nof_Variables)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
+				  LEFTV(1:5)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
+				  RIGHTV(1:5)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
 				  
 				  
 				  
@@ -13935,8 +13878,8 @@ DO I=1,kmaxe
 				  end if
 				  end if
 				  
-				  LEFTV(1:nof_Variables)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
-				  RIGHTV(1:nof_Variables)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
+				  LEFTV(1:4)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
+				  RIGHTV(1:4)=ILOCAL_RECON3(I)%ULEFT(:,j,im)
 				    call cons2prim2d2(n)
 				    px=leftv(4)
 				    
@@ -14039,7 +13982,7 @@ IF ((ITESTCASE.LE.4).AND.(TURBULENCE.NE.1))THEN
 !$OMP BARRIER 
 !$OMP DO SCHEDULE(GUIDED) REDUCTION(+:ALLRES)
 DO I=1,KMAXE
-    ALLRES(1:nof_Variables)=ALLRES(1:nof_Variables)+(rhs(i)%VAL(1:nof_Variables)**2)
+    ALLRES(1:5)=ALLRES(1:5)+(rhs(i)%VAL(1:5)**2)
 END DO
 !$OMP END DO
 
@@ -14071,7 +14014,7 @@ IF (TURBULENCE.EQ.1)THEN
 !$OMP BARRIER 
 !$OMP DO SCHEDULE(GUIDED) REDUCTION(+:ALLRES)
 DO I=1,KMAXE
-    ALLRES(1:nof_Variables)=ALLRES(1:nof_Variables)+(rhs(i)%VAL(1:nof_Variables)**2)
+    ALLRES(1:5)=ALLRES(1:5)+(rhs(i)%VAL(1:5)**2)
     ALLRES(6:5+TURBULENCEEQUATIONS)=ALLRES(6:5+TURBULENCEEQUATIONS)+(RHST(I)%VAL(1:TURBULENCEEQUATIONS)**2)
 END DO
 !$OMP END DO
@@ -14160,7 +14103,7 @@ IF ((ITESTCASE.LE.4).AND.(TURBULENCE.NE.1))THEN
 !$OMP BARRIER 
 !$OMP DO SCHEDULE(GUIDED) REDUCTION(+:ALLRES)
 DO I=1,KMAXE
-    ALLRES(1:nof_Variables)=ALLRES(1:nof_Variables)+(rhs(i)%VAL(1:nof_Variables)**2)
+    ALLRES(1:4)=ALLRES(1:4)+(rhs(i)%VAL(1:4)**2)
 END DO
 !$OMP END DO
 
@@ -14192,7 +14135,7 @@ IF (TURBULENCE.EQ.1)THEN
 !$OMP BARRIER 
 !$OMP DO SCHEDULE(GUIDED) REDUCTION(+:ALLRES)
 DO I=1,KMAXE
-    ALLRES(1:nof_Variables)=ALLRES(1:nof_Variables)+(rhs(i)%VAL(1:nof_Variables)**2)
+    ALLRES(1:4)=ALLRES(1:4)+(rhs(i)%VAL(1:4)**2)
     ALLRES(5:4+TURBULENCEEQUATIONS)=ALLRES(5:4+TURBULENCEEQUATIONS)+(RHST(I)%VAL(1:TURBULENCEEQUATIONS)**2)
 END DO
 !$OMP END DO
@@ -14261,16 +14204,12 @@ SUBROUTINE CALCULATE_ERROR(N)
 !> This subroutine computes and writes the l2,linfinity or l1 norm
 	IMPLICIT NONE
 	INTEGER,INTENT(IN)::N
-	INTEGER::I,K,KMAXE,ind_er
+	INTEGER::I,K,KMAXE
 	REAL::EXACT,DUMMYOUT,DUMMYIN
 	REAL::APROXIMATE
 	real,dimension(15)::condm
 	KMAXE=XMPIELRANK(N)
 	L0NORM=ZERO;STENNORM=ZERO;L1NORM=ZERO
-	ind_er=1
-	if (multispecies.eq.1)then
-	ind_er=nof_variables
-	end if
 	  !$OMP MASTER
 	  CALL MPI_BARRIER(MPI_COMM_WORLD,IERROR)
 	  !$OMP END MASTER
@@ -14279,8 +14218,8 @@ SUBROUTINE CALCULATE_ERROR(N)
 			!$OMP DO REDUCTION (+:L1NORM)
 			DO I=1,KMAXE
 				IF (ITESTCASE.Le.3)THEN
-				EXACT=U_E(I)%VAL(1,ind_er)
-				APROXIMATE=U_C(I)%VAL(1,ind_er)
+				EXACT=U_E(I)%VAL(1,1)
+				APROXIMATE=U_C(I)%VAL(1,1)
 ! 					IF ((ABS(APROXIMATE-EXACT)).GT.L0NORM(N,1))THEN
 ! 					L0NORM(N,1)=ABS(APROXIMATE-EXACT)
 ! 					END IF
@@ -14306,8 +14245,8 @@ SUBROUTINE CALCULATE_ERROR(N)
  			!$OMP DO REDUCTION (MAX:L0NORM)
 			DO I=1,KMAXE
 				IF (ITESTCASE.Le.3)THEN
-				EXACT=U_E(I)%VAL(1,ind_er)
-				APROXIMATE=U_C(I)%VAL(1,ind_er)
+				EXACT=U_E(I)%VAL(1,1)
+				APROXIMATE=U_C(I)%VAL(1,1)
 					IF ((ABS(APROXIMATE-EXACT)).GT.L0NORM)THEN
 					L0NORM=ABS(APROXIMATE-EXACT)
 					END IF
@@ -14325,8 +14264,8 @@ SUBROUTINE CALCULATE_ERROR(N)
  			!$OMP DO REDUCTION (MAX:L0NORM)
 			DO I=1,KMAXE
 					
-					IF (U_C(I)%VAL(1,ind_er).GT.L0NORM)THEN
-					L0NORM=U_C(I)%VAL(1,ind_er)
+					IF (U_C(I)%VAL(1,1).GT.L0NORM)THEN
+					L0NORM=U_C(I)%VAL(1,1)
 					END IF
 ! 					L1NORM(N,1)=L1NORM(N,1)+((ABS(APROXIMATE-EXACT)))
 				
@@ -14335,8 +14274,8 @@ SUBROUTINE CALCULATE_ERROR(N)
  			!$OMP DO REDUCTION (MIN:L1NORM)
 			DO I=1,KMAXE
 					
-					IF (U_C(I)%VAL(1,ind_er).LT.L1NORM)THEN
-					L1NORM=U_C(I)%VAL(1,ind_er)
+					IF (U_C(I)%VAL(1,1).LT.L1NORM)THEN
+					L1NORM=U_C(I)%VAL(1,1)
 					END IF
 ! 					L1NORM(N,1)=L1NORM(N,1)+((ABS(APROXIMATE-EXACT)))
 				
@@ -14587,7 +14526,7 @@ do j=1,NOF_VARIABLES
     end if
     if (j.eq.5)then
                 DO I=1,KMAXE
-		  leftv(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+		  leftv(1:5)=U_C(I)%VAL(1,1:5)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(5)
 		END DO
@@ -14839,7 +14778,7 @@ do j=1,NOF_VARIABLES
     end if
     if (j.eq.5)then
                 DO I=1,KMAXE
-		  leftv(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+		  leftv(1:5)=U_C(I)%VAL(1,1:5)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(5)
 		END DO
@@ -15193,7 +15132,7 @@ do j=1,NOF_VARIABLES
     if (j.eq.5)then
                 IF (TOTIW.GT.0)THEN
 		     DO I=1,TOTIW
-						leftv(1:nof_Variables)=U_C(IBOUND_T(I))%VAL(1,1:nof_Variables)
+						leftv(1:5)=U_C(IBOUND_T(I))%VAL(1,1:5)
 						CALL CONS2PRIM(N)
 						VALUESS(i)=leftv(5)
 						
@@ -15467,7 +15406,7 @@ do j=1,NOF_VARIABLES+6
     end if
     if (j.eq.5)then
                 DO I=1,KMAXE
-		  leftv(1:nof_Variables)=U_C(I)%VAL(IND1,1:nof_Variables)
+		  leftv(1:5)=U_C(I)%VAL(IND1,1:5)
 		  CALL CONS2PRIM(N)
 		  VALUESS(i)=leftv(5)
 		END DO
@@ -15853,7 +15792,7 @@ do j=1,NOF_VARIABLES+6
     if (j.eq.5)then
                 IF (TOTIW.GT.0)THEN
 		     DO I=1,TOTIW
-						leftv(1:nof_Variables)=U_C(IBOUND_T(I))%VAL(IND1,1:nof_Variables)
+						leftv(1:5)=U_C(IBOUND_T(I))%VAL(IND1,1:5)
 						CALL CONS2PRIM(N)
 						VALUESS(i)=leftv(5)
 						

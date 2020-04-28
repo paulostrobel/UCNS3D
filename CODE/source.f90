@@ -120,10 +120,10 @@ DERIVTURB(1,1:3) = ILOCAL_RECON3(I)%GRADS(5,1:3)
 SQUARET=(sqrt((DERIVTURB(1,1)**2)+(DERIVTURB(1,2)**2)+(DERIVTURB(1,3)**2)))**2
 
 
-LEFTV(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+LEFTV(1:5)=U_C(I)%VAL(1,1:5)
 
 CALL CONS2PRIM(N)
-RIGHTV(1:nof_Variables)=LEFTV(1:nof_Variables)
+RIGHTV(1:5)=LEFTV(1:5)
 CALL SUTHERLAND(N,LEFTV,RIGHTV)
 
 
@@ -504,10 +504,10 @@ DERIVTURB(1,1:3) = ILOCAL_RECON3(I)%GRADS(5,1:3)
 SQUARET=(sqrt((DERIVTURB(1,1)**2)+(DERIVTURB(1,2)**2)+(DERIVTURB(1,3)**2)))**2
 
 
-LEFTV(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+LEFTV(1:5)=U_C(I)%VAL(1,1:5)
 
 CALL CONS2PRIM(N)
-RIGHTV(1:nof_Variables)=LEFTV(1:nof_Variables)
+RIGHTV(1:5)=LEFTV(1:5)
 CALL SUTHERLAND(N,LEFTV,RIGHTV)
 
 
@@ -836,8 +836,6 @@ SUBROUTINE SOURCES_COMPUTATION2d(N)
 	
 	
 	KMAXE=XMPIELRANK(N)
-	
-	
 	!$OMP DO SCHEDULE (STATIC)
 	DO I=1,KMAXE
 		ICONSIDERED=I
@@ -845,8 +843,6 @@ SUBROUTINE SOURCES_COMPUTATION2d(N)
 		RHST(I)%VAL(1:turbulenceequations)=RHST(I)%VAL(1:turbulenceequations)-(SOURCE_T(1:turbulenceequations)*ielem(n,I)%totvolume)
 	END DO
 	!$OMP END DO 
-	
-	
 END SUBROUTINE SOURCES_COMPUTATION2d
 
 SUBROUTINE SOURCES_derivatives_COMPUTATION2d(N)
@@ -901,20 +897,12 @@ REAL:: kx,ky,kz,omx,omy,omz
 I=ICONSIDERED
 
 Verysmall = TOLSMALL
-
-
-
 	
 VORTET(1:2,1:2) = ILOCAL_RECON3(I)%GRADS(1:2,1:2)
 
 
 ux = Vortet(1,1);uy = Vortet(1,2)
 vx = Vortet(2,1);vy = Vortet(2,2)
-
-
-
-
-
 
 
 DO IHGT=1,2
@@ -949,8 +937,8 @@ DERIVTURB(1,1:2) = ILOCAL_RECON3(I)%GRADS(4,1:2)
 SQUARET=(sqrt((DERIVTURB(1,1)**2)+(DERIVTURB(1,2)**2)))**2
 
 
-LEFTV(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
-RIGHTV(1:nof_Variables)=LEFTV(1:nof_Variables)
+LEFTV(1:4)=U_C(I)%VAL(1,1:4)
+RIGHTV(1:4)=LEFTV(1:4)
 CALL CONS2PRIM2d2(N)
 
 CALL SUTHERLAND2d(N,LEFTV,RIGHTV)
@@ -1254,10 +1242,6 @@ TURBMV(2)=TURBMV(1)
 	
 END SELECT
 
-
-
-
-
 END SUBROUTINE SOURCES2d
 
 
@@ -1333,10 +1317,10 @@ DERIVTURB(1,1:2) = ILOCAL_RECON3(I)%GRADS(4,1:2)
 SQUARET=(sqrt((DERIVTURB(1,1)**2)+(DERIVTURB(1,2)**2)))**2
 
 
-LEFTV(1:nof_Variables)=U_C(I)%VAL(1,1:nof_Variables)
+LEFTV(1:4)=U_C(I)%VAL(1,1:4)
 
 CALL CONS2PRIM2d(N)
-RIGHTV(1:nof_Variables)=LEFTV(1:nof_Variables)
+RIGHTV(1:4)=LEFTV(1:4)
 CALL SUTHERLAND2d(N,LEFTV,RIGHTV)
 
 
